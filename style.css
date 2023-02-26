@@ -1,0 +1,121 @@
+html body{
+    margin: 0;
+    font-family: 'Press Start 2P';
+    font-weight: 600;
+    background-color: purple;
+    color: yellow;
+    text-shadow: -1px 1px black, 1px 1px black, 1px 1px black, 1px -1px black;
+}
+
+nav {
+    display: flex;
+    flex-direction: column;
+    background-color: darkkhaki; 
+    padding: 2em; 
+    gap: 10px;      
+}
+
+.game, .instructions {
+    color: yellow;
+    text-decoration: none;
+    text-shadow: -1px 1px black, 1px 1px black, 1px 1px black, 1px -1px black;
+    font-size: 1.5em;
+}
+
+.game:hover, .instructions:hover {
+    color: #30D5C8
+}
+
+.inth>h1 {
+    margin: 1em;
+    text-align: center;
+    font-size: 1.2em;
+}
+
+.inth>p{
+    padding-left: 1em;
+    overflow: hidden;
+    font-size: 0.8em;
+    line-height: 20px;
+}
+
+.gamepage>h1 {
+    margin: 0;
+    text-align: center;
+    font-size: 2em;
+    padding: 1em 0.5em
+}
+
+.dice-container {
+    display: flex; 
+    flex-direction: row;
+    gap: 10px;
+    justify-content: center;
+}
+
+
+.buttons1 {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;   
+}
+
+.buttons1>button {
+    background-color: darkkhaki;
+    text-shadow: -1px 1px black, 1px 1px black, 1px 1px black, 1px -1px black;
+    color: yellow;
+    font-family: 'Press Start 2P';
+    padding: 1em;
+    border-radius: 1em;
+    width: 60%;
+    align-self: center; 
+    justify-content: space-between
+}
+
+.buttons1>button:hover {
+    background-color: turquoise
+}
+
+.buttons1>button:focus{
+    outline: none;
+}
+
+.rollBtn, .bankBtn, .newDiceBtn {
+    margin-bottom: 0.5em
+}
+
+
+.gameh1 {
+    text-align: center; 
+    padding-top: 1.2em;
+}
+
+.gameh2 {
+    text-align: center; 
+    padding-top: 1.2em;
+}
+
+.theBigDice {
+    font-size: 5em;
+    margin-top: 0;
+}
+
+.dice-container {
+    height: 8em;
+    display: flex; 
+    margin-top: -20px
+
+}
+
+.theScore {
+    padding-left: 0.8em;
+}
+
+
+.rollBtn:disabled,
+.rollBtn:disabled:hover, 
+.newDiceBtn:disabled,
+.newDiceBtn:disabled:hover{
+    color: black;
+    background-color: gray 
+}
