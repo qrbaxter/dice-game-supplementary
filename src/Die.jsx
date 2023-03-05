@@ -1,11 +1,9 @@
-import React from "react";
-import { nanoid } from 'nanoid';
+import React from 'react';
 
 const styles = {
-  color: "#30D5C8",
-  white: "yellow",
+  color: '#30D5C8',
+  white: 'yellow',
 };
-
 
 function getDiceSymbol(value, isHeld) {
   const diceSymbols = [
@@ -17,9 +15,7 @@ function getDiceSymbol(value, isHeld) {
     '\u2685', // Dice symbol for 6
   ];
   return (
-    <span style={{ color: isHeld ? styles.color : styles.white}}>
-      {diceSymbols[value-1]}
-    </span>
+    <span style={{ color: isHeld ? styles.color : styles.white }}>{diceSymbols[value - 1]}</span>
   );
 }
 
