@@ -111,11 +111,8 @@ nav {
     padding-left: 0.8em;
 }
 
-
-.rollBtn:disabled,
-.rollBtn:disabled:hover, 
-.newDiceBtn:disabled,
-.newDiceBtn:disabled:hover{
+button:disabled {
     color: black;
-    background-color: gray 
+    background-color: gray;
+    pointer-events: none;
 }

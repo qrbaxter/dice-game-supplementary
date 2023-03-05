@@ -124,12 +124,10 @@ function Game() {
 
     setNewDiceBtnDisabled(true);
     setBankerinoBlock(false);
-
     const newDice = [];
     for (let i = 0; i < 6; i++) {
       newDice.push({ id: nanoid(), value: Math.floor(Math.random() * 6) + 1, isHeld: false });
     }
-
     setDice(newDice);
     setDiceSet(true);
     setBusted(false);

@@ -1,70 +1,65 @@
 import { nanoid } from 'nanoid';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Die from '../Die';
 
 const NUM_DICE = 6;
 const THRESHOLD_SCORE = 350;
-const DICE_INITIAL = Array(NUM_DICE).fill(null).map(() => ({ id: nanoid(), value: generateRandomDieValue() }));
+
+
+
+const SPECIAL_VALUES = [{
+  value: 1
+  , points: 100,
+}, { value: 5, points: 50 }];
+
+// Die status can be 'HELD' or 'BANKED' or null.
+const generateNewSet = () => Array(NUM_DICE).fill(null).map(() => ({ id: nanoid(), value: generateRandomDieValue(), status: null }));
 
 function Game() {
-  const [dice, setDice] = useState(DICE_INITIAL);
+  const [dice, setDice] = useState(generateNewSet());
 
   const [bankedScore, setBankedScore] = useState(0);
   const [currentScore, setCurrentScore] = useState(0);
   const [diceSet, setDiceSet] = useState(false);
-  const [newDiceBtnDisabled, setNewDiceBtnDisabled] = useState(false);
   const [busted, setBusted] = useState(false);
-  const [bankerinoBlock, setBankerinoBlock] = useState(false);
-  const [endTurnBtnDisabled, setEndTurnBtnDisabled] = useState(true);
   const [bustCount, setBustCount] = useState(0);
 
-  // Keep an array of IDs to keep track of held and banked.
-  const [heldDice, setHeldDice] = useState([]);
-  const [bankedDice, setBankedDice] = useState([]);
-
-  console.log('Game ➡️ held:', heldDice);
+  // Only render dice that are not banked
+  const diceToRender = dice.filter(die => die.status !== 'BANKED');
+  const diceHeld = dice.filter(die => die.status === 'HELD');
 
   function holdDice(id) {
-    setHeldDice(held => [...held, id]);
-
     setDice(oldDice =>
       oldDice.map(die => {
-        return die.id === id ? { ...die, isHeld: !die.isHeld } : die;
+        return die.id === id ? { ...die, status: die.status === 'HELD' ? null : 'HELD' } : die;
       }),
     );
   }
 
   const bankPoints = () => {
-    let ones = 0;
-    let fives = 0;
+    const matchesThreePairs = hasThreePairs(dice);
 
-    if (!threePairs(dice)) {
-      for (let i = 0; i < 6; i++) {
-        if (dice[i].isHeld && (dice[i].value === 1 || dice[i].value === 5)) {
-          if (dice[i].value === 1) {
-            ones++;
-          } else {
-            fives++;
-          }
-          dice[i].isHeld = false;
-          dice[i].value = 0;
-          setCurrentScore(currentScore + ones * 100 + fives * 50);
-        } else if (ones === 0 && fives === 0) {
-          setBankerinoBlock(true);
-          setCurrentScore(0);
-          setBusted(true);
-        }
-      }
-
-    } else if (threePairs(dice)) {
+    if (matchesThreePairs) {
       setCurrentScore(currentScore + 500);
-      setDice(oldDice =>
-        oldDice.map(die => {
-          return { ...die, isHeld: !die.isHeld, value: 0 };
-        }),
-      );
+      newSet();
+      return;
     }
+
+    const specialPoints = getPointsFromSpecialDice(dice);
+    console.log('Game ➡️ specialPoints:', specialPoints);
+
+    if (specialPoints === 0) {
+      setBusted(true);
+      setBustCount(bustCount + 1);
+      setCurrentScore(0);
+      return
+    }
+
+    setCurrentScore(current => current + specialPoints);
+    setDice(prevDice => prevDice.map(die => die.status === 'HELD' ? ({ ...die, status: 'BANKED' }) : die));
+
   };
+
 
   const endTurn = () => {
     setBankedScore(currentScore + bankedScore);
@@ -75,61 +70,45 @@ function Game() {
   const rollDice = () => {
     let newDice;
 
-    if (currentScore > 0) {
-      newDice = dice.map(die => die.value === 0 ? die : { id: die.id, value: generateRandomDieValue(), isHeld: false });
-    } else {
-      newDice = dice.map(die => {
-        return die.value !== 0 ? { ...die, value: Math.floor(Math.random() * 6) + 1 } : { ...die };
-      });
-    }
+    // Roll the dice that aren't currently held.
+    newDice = dice.map((die) => die.status === null ? ({
+      ...die, value: generateRandomDieValue()
+    }) : die);
 
-    const onesAndFives = newDice.filter(die => die.value === 1 || die.value === 5);
-    if (onesAndFives.length === 0) {
+    const newDiceRollable = newDice.filter(die => die.status === null);
+    const rollPoints = calculatePointsFromDice(newDiceRollable);
+
+    if (rollPoints === 0) {
+      setBustCount(bustCount + 1);
       setCurrentScore(0);
       setBusted(true);
-
-    } else {
-      setBusted(false);
+      return;
     }
+
     setDice(newDice);
   };
 
   const resetGame = () => {
     setBankedScore(0);
     setCurrentScore(0);
-    localStorage.clear();
     setBustCount(0);
     newSet();
   };
 
   const newSet = () => {
-    setNewDiceBtnDisabled(true);
-    setBankerinoBlock(false);
-
-    const newDice = [];
-    for (let i = 0; i < 6; i++) {
-      newDice.push({ id: nanoid(), value: Math.floor(Math.random() * 6) + 1, isHeld: false });
-    }
-
-    setDice(newDice);
+    setDice(generateNewSet());
     setDiceSet(true);
     setBusted(false);
   };
 
-  useEffect(() => {
-    if (busted) {
-      localStorage.setItem('bankedScore', bankedScore);
-      setNewDiceBtnDisabled(false);
-      setBankerinoBlock(true);
-      setEndTurnBtnDisabled(true);
-      setBustCount(bustCount + 1);
-    }
-  }, [busted]);
+
+
+  console.log('Game ➡️ diceHeld:', diceHeld);
 
   const isRollButtonDisabled = !!busted;
+  const isNewDiceButtonDisabled = !busted;
   const isEndTurnButtonDisabled = currentScore < THRESHOLD_SCORE;
-
-  const displayedDice = dice.filter(die => !bankedDice.includes(die.id));
+  const isBankButtonDisabled = diceHeld.length === 0 || !!busted;
 
   return (
     <div>
@@ -159,20 +138,16 @@ function Game() {
 
       <div>
         <div className="dice-container">
-          {busted
-            ? null
-            : dice.map(
-              die =>
-                die.value !== 0 && ( // Add this line to only render dice that haven't been banked
-                  <Die
-                    key={die.id}
-                    id={die.id}
-                    value={die.value}
-                    isHeld={die.isHeld}
-                    holdDice={() => holdDice(die.id)}
-                  />
-                ),
-            )}
+          {!busted && diceToRender.map(
+            die =>
+            (<Die
+              key={die.id}
+              id={die.id}
+              value={die.value}
+              isHeld={die.status === 'HELD'}
+              holdDice={() => holdDice(die.id)}
+            />)
+          )}
         </div>
         <div className="buttons1">
           {diceSet && (
@@ -180,10 +155,10 @@ function Game() {
               Roll Dice
             </button>
           )}
-          <button className="newDiceBtn" onClick={newSet} disabled={newDiceBtnDisabled}>
+          <button className="newDiceBtn" onClick={newSet} disabled={isNewDiceButtonDisabled}>
             New Dice
           </button>
-          <button className="bankBtn" onClick={bankPoints} disabled={bankerinoBlock}>
+          <button className="bankBtn" onClick={bankPoints} disabled={isBankButtonDisabled}>
             Bank Points
           </button>
         </div>
@@ -194,7 +169,22 @@ function Game() {
 
 const generateRandomDieValue = () => Math.ceil(Math.random() * 6);
 
-function threePairs(dice) {
+
+
+function isSixConsecutive(dice) {
+  if (dice.length !== NUM_DICE) {
+    return
+  }
+
+  // Add up all numbers from 1 to NUM_DICE
+  const consecutive = Array(NUM_DICE).fill(null).map(i => i + 1);
+  const diceSorted = dice.sort((a, b) => a - b);
+
+  const isConsecutive = consecutive.every((item, index) => item === diceSorted[index].value);
+  return isConsecutive;
+}
+
+function hasThreePairs(dice) {
   const encounteredDice = {};
 
   dice.forEach(die => {
@@ -208,6 +198,43 @@ function threePairs(dice) {
   const hasThreePairs =
     Object.values(encounteredDice).filter(cardinality => cardinality === 2).length === 3;
   return hasThreePairs;
+}
+
+function getPointsFromSpecialDice(dice) {
+  let points = 0;
+
+  dice.forEach(die => {
+    // If this die is special (1 or 5), assign to our special variable.
+    const special = SPECIAL_VALUES.find(special => special.value === die.value);
+
+    if (special) {
+      points += special.points;
+    }
+  });
+
+  return points;
+}
+
+function calculatePointsFromDice(dice) {
+  // Test all our special conditions first
+  if (hasThreePairs(dice)) {
+    return 500;
+  }
+
+  if (isSixConsecutive(dice)) {
+    return 1000;
+  }
+
+  // if (isThreeOfSimilar(dice)) {
+  //   return ...
+  // }
+
+  // if (anotherSpecialCondition(dice)) {
+  //   return ...
+  // }
+
+  return getPointsFromSpecialDice(dice);
+
 }
 
 
